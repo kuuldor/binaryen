@@ -15,7 +15,7 @@
  */
 
 //
-// Tested with LLVM 14.
+// Tested with LLVM 15.
 //
 // Use
 // #define BINARYEN_LLVM_DEBUG 1
