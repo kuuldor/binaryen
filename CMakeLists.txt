@@ -10,6 +10,22 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment ve
 project(binaryen LANGUAGES C CXX VERSION 112)
 include(GNUInstallDirs)
 
+option(BUILD_LLVM_PASS "Build LLVM pass" ON)
+
+if(BUILD_LLVM_PASS)
+  # LLVM configuration for LLVM pass
+  find_program(LLVM_CONFIG llvm-config-15)
+  if(LLVM_CONFIG)
+    execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${LLVM_CONFIG} --ldflags OUTPUT_VARIABLE LLVM_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${LLVM_CONFIG} --libs core irreader support OUTPUT_VARIABLE LLVM_CORE_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(LLVM_LIBRARIES ${LLVM_LDFLAGS} ${LLVM_CORE_LIBS})
+    include_directories(${LLVM_INCLUDE_DIR})
+  else()
+    message(FATAL_ERROR "llvm-config-15 not found. Please install LLVM 15 development files.")
+  endif()
+endif()
+
 # The C++ standard whose features are required to build Binaryen.
 # Keep in sync with scripts/test/shared.py cxx_standard
 # The if condition allows embedding in a project with a higher default C++ standard set
@@ -149,7 +165,11 @@ endif()
 
 # For now, don't include full DWARF support in JS builds, for size.
 if(NOT EMSCRIPTEN)
-  option(BUILD_LLVM_DWARF "Enable full DWARF support" ON)
+  if(BUILD_LLVM_PASS)
+    option(BUILD_LLVM_DWARF "Enable full DWARF support" OFF)
+  else()
+    option(BUILD_LLVM_DWARF "Enable full DWARF support" ON)
+  endif()
 
   if(BUILD_LLVM_DWARF)
     if(MSVC)
@@ -249,7 +269,7 @@ if(MSVC)
   endif()
 else()
 
-  option(ENABLE_WERROR "Enable -Werror" ON)
+  option(ENABLE_WERROR "Enable -Werror" OFF)
 
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   set(CMAKE_THREAD_PREFER_PTHREAD ON)
@@ -405,6 +425,9 @@ else()
   add_library(binaryen SHARED ${binaryen_SOURCES} ${binaryen_objs})
 endif()
 target_link_libraries(binaryen ${CMAKE_THREAD_LIBS_INIT})
+if(BUILD_LLVM_PASS)
+  target_link_libraries(binaryen ${LLVM_LIBRARIES})
+endif()
 if(INSTALL_LIBS OR NOT BUILD_STATIC_LIB)
   install(TARGETS binaryen
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

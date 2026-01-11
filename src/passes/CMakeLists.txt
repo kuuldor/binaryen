@@ -33,7 +33,6 @@ set(passes_SOURCES
   Directize.cpp
   DuplicateImportElimination.cpp
   DuplicateFunctionElimination.cpp
-  DWARF.cpp
   ExtractFunction.cpp
   Flatten.cpp
   FuncCastEmulation.cpp
@@ -116,4 +115,10 @@ set(passes_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/WasmIntrinsics.cpp
   ${passes_HEADERS}
 )
+if(BUILD_LLVM_PASS)
+  list(APPEND passes_SOURCES LLVM.cpp)
+endif()
+if(BUILD_LLVM_DWARF)
+  list(APPEND passes_SOURCES DWARF.cpp)
+endif()
 add_library(passes OBJECT ${passes_SOURCES})

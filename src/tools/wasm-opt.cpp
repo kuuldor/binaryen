@@ -88,6 +88,7 @@ int main(int argc, const char* argv[]) {
   std::string emitJSWrapper;
   std::string emitSpecWrapper;
   std::string emitWasm2CWrapper;
+  bool emitLLVM = false;
   std::string inputSourceMapFilename;
   std::string outputSourceMapFilename;
   std::string outputSourceMapUrl;
@@ -111,6 +112,15 @@ int main(int argc, const char* argv[]) {
          WasmOptOption,
          Options::Arguments::Zero,
          [&](Options* o, const std::string& argument) { emitBinary = false; })
+    .add("--emit-llvm",
+         "",
+         "Emit LLVM IR instead of WebAssembly",
+         WasmOptOption,
+         Options::Arguments::Zero,
+         [&](Options* o, const std::string& arguments) {
+           emitLLVM = true;
+           static_cast<OptimizationOptions*>(o)->passes.push_back("llvm");
+         })
     .add("--converge",
          "-c",
          "Run passes to convergence, continuing while binary size decreases",
@@ -241,6 +251,15 @@ int main(int argc, const char* argv[]) {
                       o->extra["infile"] = argument;
                     });
   options.parse(argc, argv);
+
+  if (emitLLVM) {
+    std::string output = "stdout";
+    if (options.extra.count("output")) {
+      output = options.extra["output"];
+    }
+    static_cast<OptimizationOptions*>(&options)
+      ->passOptions.arguments["llvm-output"] = output;
+  }
 
   Module wasm;
   options.applyFeatures(wasm);
@@ -408,21 +427,24 @@ int main(int argc, const char* argv[]) {
     return 0;
   }
 
-  BYN_TRACE("writing...\n");
-  ModuleWriter writer;
-  writer.setBinary(emitBinary);
-  writer.setDebugInfo(options.passOptions.debugInfo);
-  if (outputSourceMapFilename.size()) {
-    writer.setSourceMapFilename(outputSourceMapFilename);
-    writer.setSourceMapUrl(outputSourceMapUrl);
-  }
-  writer.write(wasm, options.extra["output"]);
+  if (!emitLLVM) {
+    BYN_TRACE("writing...\n");
+    ModuleWriter writer;
+    writer.setBinary(emitBinary);
+    writer.setDebugInfo(options.passOptions.debugInfo);
+    if (outputSourceMapFilename.size()) {
+      writer.setSourceMapFilename(outputSourceMapFilename);
+      writer.setSourceMapUrl(outputSourceMapUrl);
+    }
+    writer.write(wasm, options.extra["output"]);
 
-  if (extraFuzzCommand.size() > 0) {
-    auto secondOutput = runCommand(extraFuzzCommand);
-    std::cout << "[extra-fuzz-command second output:]\n" << firstOutput << '\n';
-    if (firstOutput != secondOutput) {
-      Fatal() << "extra fuzz command output differs\n";
+    if (extraFuzzCommand.size() > 0) {
+      auto secondOutput = runCommand(extraFuzzCommand);
+      std::cout << "[extra-fuzz-command second output:]\n"
+                << firstOutput << '\n';
+      if (firstOutput != secondOutput) {
+        Fatal() << "extra fuzz command output differs\n";
+      }
     }
   }
   return 0;
