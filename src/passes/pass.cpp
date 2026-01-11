@@ -252,7 +252,7 @@ void PassRegistry::registerPasses() {
                "apply more specific subtypes to locals where possible",
                createLocalSubtypingPass);
   registerPass("llvm",
-               "convert Binaryen IR to LLVM IR",
+               "convert WASM to LLVM IR",
                createLLVMPass);
   registerPass("log-execution",
                "instrument the build with logging of where execution goes",

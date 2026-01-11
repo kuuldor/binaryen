@@ -218,7 +218,7 @@ struct LLVMPass : public wasm::Pass {
     v128 = Type::getInt128Ty(*context);
     v01d = Type::getVoidTy(*context);
     // funcRef for a generic function pointer type
-    funcRef = PointerType::getUnqual(FunctionType::get(i32, false));
+    funcRef = PointerType::getUnqual(*context);
     anyRef = PointerType::getUnqual(*context);
 
     currentFunc = nullptr;
@@ -234,7 +234,7 @@ struct LLVMPass : public wasm::Pass {
     }
 
     targetMachine = std::unique_ptr<TargetMachine>(
-      target->createTargetMachine(triple.getTriple(), "generic", "", {}, {}));
+      target->createTargetMachine(triple, "generic", "", {}, {}));
 
     emitter = std::make_unique<IREmitter>(*this);
   }
@@ -541,15 +541,9 @@ struct LLVMPass : public wasm::Pass {
     //   }
     // }
 
-    if (!curr->stackIR) {
+    emitter->iterateBody(curr->body);
 
-      emitter->iterateBody(curr->body);
-
-      finishFunction(*func);
-
-    } else {
-      PANIC("StackIR is not supported");
-    }
+    finishFunction(*func);
 
     restore_function(prevFunc);
   }
@@ -729,7 +723,7 @@ struct LLVMPass : public wasm::Pass {
   void visitExport(wasm::Export* curr) {
     LOG("Mark exports external " + curr->name.toString() +
         " == " + curr->value.toString());
-    auto localName = curr->value.toString();
+    auto localName = curr->getInternalName()->toString();
     GlobalVariable* global = nullptr;
 
     switch (curr->kind) {
@@ -774,7 +768,7 @@ struct LLVMPass : public wasm::Pass {
 
     mod = std::make_unique<Module>(
       curr->name.is() ? curr->name.toString() : "WasmModule", *context);
-    mod->setTargetTriple(triple.getTriple());
+    mod->setTargetTriple(triple);
     builder = std::make_unique<IRBuilder<>>(*context);
 
     auto nullFuncType = FunctionType::get(i32, false);
@@ -873,7 +867,7 @@ struct LLVMPass : public wasm::Pass {
   const std::vector<Type*> wasmTupleToLLVMTypes(wasm::Type type) {
     std::vector<Type*> llvmTypes{};
     auto types =
-      (type.isTuple() ? type.getTuple().types : std::vector<wasm::Type>{type});
+      (type.isTuple() ? type.getTuple() : std::vector<wasm::Type>{type});
 
     for (auto t : types) {
       Type* llvmType = wasmTypeToLLVM(t);
@@ -962,7 +956,7 @@ void LLVMPass::IREmitter::appendInsertionBlock(BasicBlock* block) {
     Builder.CreateBr(block);
     Parent.branchMap[block].push_back({prevInstPt, Parent.lastValue});
   }
-  Func->getBasicBlockList().push_back(block);
+  Func->insert(Func->end(), block);
   Builder.SetInsertPoint(block);
 }
 
@@ -1029,8 +1023,8 @@ Value* LLVMPass::IREmitter::visitBlock(wasm::Block* curr) {
 Value* LLVMPass::IREmitter::assurePtrType(Value* val, Type* elmTy) {
   Value* ptr = nullptr;
   auto ty = val->getType();
-  auto ptrTy =
-    elmTy ? PointerType::getUnqual(elmTy) : PointerType::getUnqual(Context);
+  auto ptrTy = elmTy ? PointerType::get(*Parent.context, 0)
+                     : PointerType::get(*Parent.context, 0);
 
   if (ty->isIntegerTy()) {
     ptr = new IntToPtrInst(val, ptrTy, "", Builder.GetInsertBlock());
@@ -2249,6 +2243,48 @@ Value* LLVMPass::IREmitter::visitBinary(wasm::Binary* curr) {
     case wasm::DotI8x16I7x16SToVecI16x8:
       PANIC("   op = i16x8.dot_i8x16_i7x16_s");
       break;
+    case wasm::EqVecF16x8:
+      PANIC("   op = f16x8.eq");
+      break;
+    case wasm::NeVecF16x8:
+      PANIC("   op = f16x8.ne");
+      break;
+    case wasm::LtVecF16x8:
+      PANIC("   op = f16x8.lt");
+      break;
+    case wasm::GtVecF16x8:
+      PANIC("   op = f16x8.gt");
+      break;
+    case wasm::LeVecF16x8:
+      PANIC("   op = f16x8.le");
+      break;
+    case wasm::GeVecF16x8:
+      PANIC("   op = f16x8.ge");
+      break;
+    case wasm::AddVecF16x8:
+      PANIC("   op = f16x8.add");
+      break;
+    case wasm::SubVecF16x8:
+      PANIC("   op = f16x8.sub");
+      break;
+    case wasm::MulVecF16x8:
+      PANIC("   op = f16x8.mul");
+      break;
+    case wasm::DivVecF16x8:
+      PANIC("   op = f16x8.div");
+      break;
+    case wasm::MinVecF16x8:
+      PANIC("   op = f16x8.min");
+      break;
+    case wasm::MaxVecF16x8:
+      PANIC("   op = f16x8.max");
+      break;
+    case wasm::PMinVecF16x8:
+      PANIC("   op = f16x8.pmin");
+      break;
+    case wasm::PMaxVecF16x8:
+      PANIC("   op = f16x8.pmax");
+      break;
 
     case wasm::InvalidBinary:
       PANIC("unvalid binary operator");
@@ -2839,6 +2875,42 @@ Value* LLVMPass::IREmitter::visitUnary(wasm::Unary* curr) {
       break;
     case wasm::RelaxedTruncZeroUVecF64x2ToVecI32x4:
       LOG(".   op = i32x4.relaxed_trunc_f64x2_u_zero");
+      break;
+    case wasm::AbsVecF16x8:
+      PANIC(".   op = f16x8.abs");
+      break;
+    case wasm::NegVecF16x8:
+      PANIC(".   op = f16x8.neg");
+      break;
+    case wasm::SqrtVecF16x8:
+      PANIC(".   op = f16x8.sqrt");
+      break;
+    case wasm::CeilVecF16x8:
+      PANIC(".   op = f16x8.ceil");
+      break;
+    case wasm::FloorVecF16x8:
+      PANIC(".   op = f16x8.floor");
+      break;
+    case wasm::TruncVecF16x8:
+      PANIC(".   op = f16x8.trunc");
+      break;
+    case wasm::NearestVecF16x8:
+      PANIC(".   op = f16x8.nearest");
+      break;
+    case wasm::SplatVecF16x8:
+      PANIC(".   op = f16x8.splat");
+      break;
+    case wasm::TruncSatSVecF16x8ToVecI16x8:
+      PANIC(".   op = i16x8.trunc_sat_f16x8_s");
+      break;
+    case wasm::TruncSatUVecF16x8ToVecI16x8:
+      PANIC(".   op = i16x8.trunc_sat_f16x8_u");
+      break;
+    case wasm::ConvertSVecI16x8ToVecF16x8:
+      PANIC(".   op = f16x8.convert_i16x8_s");
+      break;
+    case wasm::ConvertUVecI16x8ToVecF16x8:
+      PANIC(".   op = f16x8.convert_i16x8_u");
       break;
     case wasm::InvalidUnary:
       PANIC("unvalid unary operator");

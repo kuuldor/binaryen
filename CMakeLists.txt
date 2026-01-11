@@ -14,7 +14,7 @@ option(BUILD_LLVM_PASS "Build LLVM pass" ON)
 
 if(BUILD_LLVM_PASS)
   # LLVM configuration for LLVM pass
-  find_program(LLVM_CONFIG llvm-config-15)
+  find_program(LLVM_CONFIG llvm-config)
   if(LLVM_CONFIG)
     execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND ${LLVM_CONFIG} --ldflags OUTPUT_VARIABLE LLVM_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
