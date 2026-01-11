@@ -44,7 +44,9 @@ Pass* createDeAlignPass();
 Pass* createDebugLocationPropagationPass();
 Pass* createDirectizePass();
 Pass* createDiscardGlobalEffectsPass();
+#ifdef BUILD_LLVM_DWARF
 Pass* createDWARFDumpPass();
+#endif
 Pass* createDuplicateImportEliminationPass();
 Pass* createDuplicateFunctionEliminationPass();
 Pass* createEmitTargetFeaturesPass();
@@ -78,6 +80,7 @@ Pass* createLegalizeJSInterfacePass();
 Pass* createLimitSegmentsPass();
 Pass* createLocalCSEPass();
 Pass* createLocalSubtypingPass();
+Pass* createLLVMPass();
 Pass* createLogExecutionPass();
 Pass* createIntrinsicLoweringPass();
 Pass* createTraceCallsPass();

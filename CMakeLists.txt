@@ -10,6 +10,22 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment ve
 project(binaryen LANGUAGES C CXX VERSION 125)
 include(GNUInstallDirs)
 
+option(BUILD_LLVM_PASS "Build LLVM pass" ON)
+
+if(BUILD_LLVM_PASS)
+  # LLVM configuration for LLVM pass
+  find_program(LLVM_CONFIG llvm-config-15)
+  if(LLVM_CONFIG)
+    execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${LLVM_CONFIG} --ldflags OUTPUT_VARIABLE LLVM_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${LLVM_CONFIG} --libs core irreader support OUTPUT_VARIABLE LLVM_CORE_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(LLVM_LIBRARIES ${LLVM_LDFLAGS} ${LLVM_CORE_LIBS})
+    include_directories(${LLVM_INCLUDE_DIR})
+  else()
+    message(FATAL_ERROR "llvm-config-15 not found. Please install LLVM 15 development files.")
+  endif()
+endif()
+
 # The C++ standard whose features are required to build Binaryen.
 # Keep in sync with scripts/test/shared.py cxx_standard
 # The if condition allows embedding in a project with a higher default C++ standard set
@@ -51,6 +67,11 @@ option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_LLVM_DWARF "Enable full DWARF support" ON)
 if(EMSCRIPTEN)
   # For now, don't include full DWARF support in JS builds, for size.
+  set(BUILD_LLVM_DWARF OFF)
+endif()
+
+if(BUILD_LLVM_PASS)
+  # DWARF support is not compatible with newer version of LLVM.
   set(BUILD_LLVM_DWARF OFF)
 endif()
 
@@ -477,6 +498,10 @@ endif()
 target_link_libraries(binaryen Threads::Threads)
 if(BUILD_LLVM_DWARF)
   target_link_libraries(binaryen llvm_dwarf)
+endif()
+
+if(BUILD_LLVM_PASS)
+  target_link_libraries(binaryen ${LLVM_LIBRARIES})
 endif()
 
 if(BUILD_MIMALLOC)

@@ -35,7 +35,6 @@ set(passes_SOURCES
   Directize.cpp
   DuplicateImportElimination.cpp
   DuplicateFunctionElimination.cpp
-  DWARF.cpp
   EncloseWorld.cpp
   ExtractFunction.cpp
   Flatten.cpp
@@ -148,4 +147,13 @@ if(EMSCRIPTEN)
   list(REMOVE_ITEM passes_SOURCES "hash-stringify-walker.cpp")
   list(REMOVE_ITEM passes_SOURCES "Outlining.cpp")
 endif()
+
+if(BUILD_LLVM_PASS)
+  list(APPEND passes_SOURCES LLVM.cpp)
+endif()
+
+if(BUILD_LLVM_DWARF)
+  list(APPEND passes_SOURCES DWARF.cpp)
+endif()
+
 target_sources(binaryen PRIVATE ${passes_SOURCES})

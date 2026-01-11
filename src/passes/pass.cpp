@@ -147,9 +147,11 @@ void PassRegistry::registerPasses() {
                createDiscardGlobalEffectsPass);
   registerPass(
     "dfo", "optimizes using the DataFlow SSA IR", createDataFlowOptsPass);
+#ifdef BUILD_LLVM_DWARF
   registerPass("dwarfdump",
                "dump DWARF debug info sections from the read binary",
                createDWARFDumpPass);
+#endif
   registerPass("duplicate-import-elimination",
                "removes duplicate imports",
                createDuplicateImportEliminationPass);
@@ -249,6 +251,9 @@ void PassRegistry::registerPasses() {
   registerPass("local-subtyping",
                "apply more specific subtypes to locals where possible",
                createLocalSubtypingPass);
+  registerPass("llvm",
+               "convert Binaryen IR to LLVM IR",
+               createLLVMPass);
   registerPass("log-execution",
                "instrument the build with logging of where execution goes",
                createLogExecutionPass);
