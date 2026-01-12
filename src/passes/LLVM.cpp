@@ -1990,90 +1990,165 @@ Value* LLVMPass::IREmitter::visitBinary(wasm::Binary* curr) {
       inst = Builder.CreateAdd(left, right);
       break;
     case wasm::AddSatSVecI8x16:
-      PANIC("   op = i8x16.add_sat_s");
+      LOG("   op = i8x16.add_sat_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::sadd_sat, left, right);
       break;
     case wasm::AddSatUVecI8x16:
-      PANIC("   op = i8x16.add_sat_u");
+      LOG("   op = i8x16.add_sat_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, left, right);
       break;
     case wasm::SubVecI8x16:
       LOG("   op = i8x16.sub");
       inst = Builder.CreateSub(left, right);
       break;
     case wasm::SubSatSVecI8x16:
-      PANIC("   op = i8x16.sub_sat_s");
+      LOG("   op = i8x16.sub_sat_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::ssub_sat, left, right);
       break;
     case wasm::SubSatUVecI8x16:
-      PANIC("   op = i8x16.sub_sat_u");
+      LOG("   op = i8x16.sub_sat_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::usub_sat, left, right);
       break;
     case wasm::MinSVecI8x16:
-      PANIC("   op = i8x16.min_s");
+      LOG("   op = i8x16.min_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::smin, left, right);
       break;
     case wasm::MinUVecI8x16:
-      PANIC("   op = i8x16.min_u");
+      LOG("   op = i8x16.min_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::umin, left, right);
       break;
     case wasm::MaxSVecI8x16:
-      PANIC("   op = i8x16.max_s");
+      LOG("   op = i8x16.max_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::smax, left, right);
       break;
     case wasm::MaxUVecI8x16:
-      PANIC("   op = i8x16.max_u");
+      LOG("   op = i8x16.max_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::umax, left, right);
       break;
-    case wasm::AvgrUVecI8x16:
-      PANIC("   op = i8x16.avgr_u");
+    case wasm::AvgrUVecI8x16: {
+      LOG("   op = i8x16.avgr_u");
+      auto sum = Builder.CreateAdd(left, right);
+      auto one = ConstantInt::get(sum->getType(), 1);
+      auto sum1 = Builder.CreateAdd(sum, one);
+      inst = Builder.CreateUDiv(sum1, ConstantInt::get(sum->getType(), 2));
       break;
+    }
     case wasm::AddVecI16x8:
       LOG("   op = i16x8.add");
       inst = Builder.CreateAdd(left, right);
       break;
     case wasm::AddSatSVecI16x8:
-      PANIC("   op = i16x8.add_sat_s");
+      LOG("   op = i16x8.add_sat_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::sadd_sat, left, right);
       break;
     case wasm::AddSatUVecI16x8:
-      PANIC("   op = i16x8.add_sat_u");
+      LOG("   op = i16x8.add_sat_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, left, right);
+      break;
+    case wasm::SubSatSVecI16x8:
+      LOG("   op = i16x8.sub_sat_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::ssub_sat, left, right);
+      break;
+    case wasm::SubSatUVecI16x8:
+      LOG("   op = i16x8.sub_sat_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::usub_sat, left, right);
       break;
     case wasm::SubVecI16x8:
       LOG("   op = i16x8.sub");
       inst = Builder.CreateSub(left, right);
       break;
-    case wasm::SubSatSVecI16x8:
-      PANIC("   op = i16x8.sub_sat_s");
-      break;
-    case wasm::SubSatUVecI16x8:
-      PANIC("   op = i16x8.sub_sat_u");
-      break;
+
     case wasm::MulVecI16x8:
       LOG("   op = i16x8.mul");
       inst = Builder.CreateMul(left, right);
       break;
     case wasm::MinSVecI16x8:
-      PANIC("   op = i16x8.min_s");
+      LOG("   op = i16x8.min_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::smin, left, right);
       break;
     case wasm::MinUVecI16x8:
-      PANIC("   op = i16x8.min_u");
+      LOG("   op = i16x8.min_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::umin, left, right);
       break;
     case wasm::MaxSVecI16x8:
-      PANIC("   op = i16x8.max_s");
+      LOG("   op = i16x8.max_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::smax, left, right);
       break;
     case wasm::MaxUVecI16x8:
-      PANIC("   op = i16x8.max_u");
+      LOG("   op = i16x8.max_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::umax, left, right);
       break;
-    case wasm::AvgrUVecI16x8:
-      PANIC("   op = i16x8.avgr_u");
+    case wasm::AvgrUVecI16x8: {
+      LOG("   op = i16x8.avgr_u");
+      auto sum = Builder.CreateAdd(left, right);
+      auto one = ConstantInt::get(sum->getType(), 1);
+      auto sum1 = Builder.CreateAdd(sum, one);
+      inst = Builder.CreateUDiv(sum1, ConstantInt::get(sum->getType(), 2));
       break;
-    case wasm::Q15MulrSatSVecI16x8:
-      PANIC("   op = i16x8.q15mulr_sat_s");
+    }
+    case wasm::Q15MulrSatSVecI16x8: {
+      LOG("   op = i16x8.q15mulr_sat_s");
+      auto mul = Builder.CreateMul(left, right);
+      auto bias = ConstantInt::get(mul->getType(), 0x4000);
+      auto sum = Builder.CreateAdd(mul, bias);
+      auto shifted = Builder.CreateAShr(sum, 15);
+      auto minVal = ConstantInt::get(shifted->getType(), -32768);
+      auto maxVal = ConstantInt::get(shifted->getType(), 32767);
+      auto clamped = Builder.CreateBinaryIntrinsic(
+        Intrinsic::smin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::smax, shifted, minVal),
+        maxVal);
+      inst = clamped;
       break;
-    case wasm::ExtMulLowSVecI16x8:
-      PANIC("   op = i16x8.extmul_low_i8x16_s");
+    }
+    case wasm::ExtMulLowSVecI16x8: {
+      LOG("   op = i16x8.extmul_low_i8x16_s");
+      auto i8Ty = VectorType::get(Type::getInt8Ty(*Parent.context),
+                                  ElementCount::getFixed(16));
+      auto leftLow = Builder.CreateTrunc(left, i8Ty);
+      auto rightLow = Builder.CreateTrunc(right, i8Ty);
+      auto leftExt = Builder.CreateSExt(leftLow, left->getType());
+      auto rightExt = Builder.CreateSExt(rightLow, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulHighSVecI16x8:
-      PANIC("   op = i16x8.extmul_high_i8x16_s");
+    }
+    case wasm::ExtMulHighSVecI16x8: {
+      LOG("   op = i16x8.extmul_high_i8x16_s");
+      auto i8Ty = VectorType::get(Type::getInt8Ty(*Parent.context),
+                                  ElementCount::getFixed(16));
+      auto leftHigh = Builder.CreateTrunc(
+        Builder.CreateAShr(left, ConstantInt::get(left->getType(), 8)), i8Ty);
+      auto rightHigh = Builder.CreateTrunc(
+        Builder.CreateAShr(right, ConstantInt::get(right->getType(), 8)), i8Ty);
+      auto leftExt = Builder.CreateSExt(leftHigh, left->getType());
+      auto rightExt = Builder.CreateSExt(rightHigh, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulLowUVecI16x8:
-      PANIC("   op = i16x8.extmul_low_i8x16_u");
+    }
+    case wasm::ExtMulLowUVecI16x8: {
+      LOG("   op = i16x8.extmul_low_i8x16_u");
+      auto i8Ty = VectorType::get(Type::getInt8Ty(*Parent.context),
+                                  ElementCount::getFixed(16));
+      auto leftLow = Builder.CreateTrunc(left, i8Ty);
+      auto rightLow = Builder.CreateTrunc(right, i8Ty);
+      auto leftExt = Builder.CreateZExt(leftLow, left->getType());
+      auto rightExt = Builder.CreateZExt(rightLow, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulHighUVecI16x8:
-      PANIC("   op = i16x8.extmul_high_i8x16_u");
+    }
+    case wasm::ExtMulHighUVecI16x8: {
+      LOG("   op = i16x8.extmul_high_i8x16_u");
+      auto i8Ty = VectorType::get(Type::getInt8Ty(*Parent.context),
+                                  ElementCount::getFixed(16));
+      auto leftHigh = Builder.CreateTrunc(
+        Builder.CreateLShr(left, ConstantInt::get(left->getType(), 8)), i8Ty);
+      auto rightHigh = Builder.CreateTrunc(
+        Builder.CreateLShr(right, ConstantInt::get(right->getType(), 8)), i8Ty);
+      auto leftExt = Builder.CreateZExt(leftHigh, left->getType());
+      auto rightExt = Builder.CreateZExt(rightHigh, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
+    }
 
     case wasm::AddVecI32x4:
       LOG("   op = i32x4.add");
@@ -2088,32 +2163,127 @@ Value* LLVMPass::IREmitter::visitBinary(wasm::Binary* curr) {
       inst = Builder.CreateMul(left, right);
       break;
     case wasm::MinSVecI32x4:
-      PANIC("   op = i32x4.min_s");
+      LOG("   op = i32x4.min_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::smin, left, right);
       break;
     case wasm::MinUVecI32x4:
-      PANIC("   op = i32x4.min_u");
+      LOG("   op = i32x4.min_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::umin, left, right);
       break;
     case wasm::MaxSVecI32x4:
-      PANIC("   op = i32x4.max_s");
+      LOG("   op = i32x4.max_s");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::smax, left, right);
       break;
     case wasm::MaxUVecI32x4:
-      PANIC("   op = i32x4.max_u");
+      LOG("   op = i32x4.max_u");
+      inst = Builder.CreateBinaryIntrinsic(Intrinsic::umax, left, right);
       break;
-    case wasm::DotSVecI16x8ToVecI32x4:
-      PANIC("   op = i32x4.dot_i16x8_s");
+    case wasm::DotSVecI16x8ToVecI32x4: {
+      LOG("   op = i32x4.dot_i16x8_s");
+      auto i32x8Ty = VectorType::get(Type::getInt32Ty(*Parent.context),
+                                     ElementCount::getFixed(8));
+      auto leftSext = Builder.CreateSExt(left, i32x8Ty);
+      auto rightSext = Builder.CreateSExt(right, i32x8Ty);
+      auto prod = Builder.CreateMul(leftSext, rightSext);
+      // Now, add pairs: prod[0]+prod[1], prod[2]+prod[3], etc.
+      // Shuffle to <prod[0], prod[2], prod[4], prod[6], prod[1], prod[3],
+      // prod[5], prod[7]>
+      std::vector<int> mask = {0, 2, 4, 6, 1, 3, 5, 7};
+      auto shuffled = Builder.CreateShuffleVector(
+        prod, Constant::getNullValue(prod->getType()), mask);
+      // Now, add first 4 and last 4
+      auto low =
+        Builder.CreateShuffleVector(shuffled,
+                                    Constant::getNullValue(shuffled->getType()),
+                                    std::vector<int>{0, 1, 2, 3});
+      auto high =
+        Builder.CreateShuffleVector(shuffled,
+                                    Constant::getNullValue(shuffled->getType()),
+                                    std::vector<int>{4, 5, 6, 7});
+      inst = Builder.CreateAdd(low, high);
       break;
-    case wasm::ExtMulLowSVecI32x4:
-      PANIC("   op = i32x4.extmul_low_i16x8_s");
+    }
+    case wasm::DotI8x16I7x16SToVecI16x8: {
+      LOG("   op = i16x8.dot_i8x16_i7x16_s");
+      auto i16x16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                      ElementCount::getFixed(16));
+      auto leftSext = Builder.CreateSExt(
+        Builder.CreateTrunc(left,
+                            VectorType::get(Type::getInt8Ty(*Parent.context),
+                                            ElementCount::getFixed(16))),
+        i16x16Ty);
+      auto rightSext = Builder.CreateSExt(
+        Builder.CreateTrunc(right,
+                            VectorType::get(Type::getInt8Ty(*Parent.context),
+                                            ElementCount::getFixed(16))),
+        i16x16Ty);
+      auto prod = Builder.CreateMul(leftSext, rightSext);
+      // Add pairs: similar shuffle
+      std::vector<int> mask = {
+        0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15};
+      auto shuffled = Builder.CreateShuffleVector(
+        prod, Constant::getNullValue(prod->getType()), mask);
+      auto low =
+        Builder.CreateShuffleVector(shuffled,
+                                    Constant::getNullValue(shuffled->getType()),
+                                    std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7});
+      auto high = Builder.CreateShuffleVector(
+        shuffled,
+        Constant::getNullValue(shuffled->getType()),
+        std::vector<int>{8, 9, 10, 11, 12, 13, 14, 15});
+      inst = Builder.CreateAdd(low, high);
       break;
-    case wasm::ExtMulHighSVecI32x4:
-      PANIC("   op = i32x4.extmul_high_i16x8_s");
+    }
+    case wasm::ExtMulLowSVecI32x4: {
+      LOG("   op = i32x4.extmul_low_i16x8_s");
+      auto i16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                   ElementCount::getFixed(8));
+      auto leftLow = Builder.CreateTrunc(left, i16Ty);
+      auto rightLow = Builder.CreateTrunc(right, i16Ty);
+      auto leftExt = Builder.CreateSExt(leftLow, left->getType());
+      auto rightExt = Builder.CreateSExt(rightLow, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulLowUVecI32x4:
-      PANIC("   op = i32x4.extmul_low_i16x8_u");
+    }
+    case wasm::ExtMulHighSVecI32x4: {
+      LOG("   op = i32x4.extmul_high_i16x8_s");
+      auto i16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                   ElementCount::getFixed(8));
+      auto leftHigh = Builder.CreateTrunc(
+        Builder.CreateAShr(left, ConstantInt::get(left->getType(), 16)), i16Ty);
+      auto rightHigh = Builder.CreateTrunc(
+        Builder.CreateAShr(right, ConstantInt::get(right->getType(), 16)),
+        i16Ty);
+      auto leftExt = Builder.CreateSExt(leftHigh, left->getType());
+      auto rightExt = Builder.CreateSExt(rightHigh, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulHighUVecI32x4:
-      PANIC("   op = i32x4.extmul_high_i16x8_u");
+    }
+    case wasm::ExtMulLowUVecI32x4: {
+      LOG("   op = i32x4.extmul_low_i16x8_u");
+      auto i16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                   ElementCount::getFixed(8));
+      auto leftLow = Builder.CreateTrunc(left, i16Ty);
+      auto rightLow = Builder.CreateTrunc(right, i16Ty);
+      auto leftExt = Builder.CreateZExt(leftLow, left->getType());
+      auto rightExt = Builder.CreateZExt(rightLow, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
+    }
+    case wasm::ExtMulHighUVecI32x4: {
+      LOG("   op = i32x4.extmul_high_i16x8_u");
+      auto i16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                   ElementCount::getFixed(8));
+      auto leftHigh = Builder.CreateTrunc(
+        Builder.CreateLShr(left, ConstantInt::get(left->getType(), 16)), i16Ty);
+      auto rightHigh = Builder.CreateTrunc(
+        Builder.CreateLShr(right, ConstantInt::get(right->getType(), 16)),
+        i16Ty);
+      auto leftExt = Builder.CreateZExt(leftHigh, left->getType());
+      auto rightExt = Builder.CreateZExt(rightHigh, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
+      break;
+    }
 
     case wasm::AddVecI64x2:
       LOG("   op = i64x2.add");
@@ -2127,18 +2297,56 @@ Value* LLVMPass::IREmitter::visitBinary(wasm::Binary* curr) {
       LOG("   op = i64x2.mul");
       inst = Builder.CreateMul(left, right);
       break;
-    case wasm::ExtMulLowSVecI64x2:
-      PANIC("   op = i64x2.extmul_low_i32x4_s");
+    case wasm::ExtMulLowSVecI64x2: {
+      LOG("   op = i64x2.extmul_low_i32x4_s");
+      auto i32Ty = VectorType::get(Type::getInt32Ty(*Parent.context),
+                                   ElementCount::getFixed(4));
+      auto leftLow = Builder.CreateTrunc(left, i32Ty);
+      auto rightLow = Builder.CreateTrunc(right, i32Ty);
+      auto leftExt = Builder.CreateSExt(leftLow, left->getType());
+      auto rightExt = Builder.CreateSExt(rightLow, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulHighSVecI64x2:
-      PANIC("   op = i64x2.extmul_high_i32x4_s");
+    }
+    case wasm::ExtMulHighSVecI64x2: {
+      LOG("   op = i64x2.extmul_high_i32x4_s");
+      auto i32Ty = VectorType::get(Type::getInt32Ty(*Parent.context),
+                                   ElementCount::getFixed(4));
+      auto leftHigh = Builder.CreateTrunc(
+        Builder.CreateAShr(left, ConstantInt::get(left->getType(), 32)), i32Ty);
+      auto rightHigh = Builder.CreateTrunc(
+        Builder.CreateAShr(right, ConstantInt::get(right->getType(), 32)),
+        i32Ty);
+      auto leftExt = Builder.CreateSExt(leftHigh, left->getType());
+      auto rightExt = Builder.CreateSExt(rightHigh, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulLowUVecI64x2:
-      PANIC("   op = i64x2.extmul_low_i32x4_u");
+    }
+    case wasm::ExtMulLowUVecI64x2: {
+      LOG("   op = i64x2.extmul_low_i32x4_u");
+      auto i32Ty = VectorType::get(Type::getInt32Ty(*Parent.context),
+                                   ElementCount::getFixed(4));
+      auto leftLow = Builder.CreateTrunc(left, i32Ty);
+      auto rightLow = Builder.CreateTrunc(right, i32Ty);
+      auto leftExt = Builder.CreateZExt(leftLow, left->getType());
+      auto rightExt = Builder.CreateZExt(rightLow, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
-    case wasm::ExtMulHighUVecI64x2:
-      PANIC("   op = i64x2.extmul_high_i32x4_u");
+    }
+    case wasm::ExtMulHighUVecI64x2: {
+      LOG("   op = i64x2.extmul_high_i32x4_u");
+      auto i32Ty = VectorType::get(Type::getInt32Ty(*Parent.context),
+                                   ElementCount::getFixed(4));
+      auto leftHigh = Builder.CreateTrunc(
+        Builder.CreateLShr(left, ConstantInt::get(left->getType(), 32)), i32Ty);
+      auto rightHigh = Builder.CreateTrunc(
+        Builder.CreateLShr(right, ConstantInt::get(right->getType(), 32)),
+        i32Ty);
+      auto leftExt = Builder.CreateZExt(leftHigh, left->getType());
+      auto rightExt = Builder.CreateZExt(rightHigh, right->getType());
+      inst = Builder.CreateMul(leftExt, rightExt);
       break;
+    }
 
     case wasm::AddVecF32x4:
       LOG("   op = f32x4.add");
@@ -2205,85 +2413,190 @@ Value* LLVMPass::IREmitter::visitBinary(wasm::Binary* curr) {
       inst = Builder.CreateMaxNum(left, right);
       break;
 
-    case wasm::NarrowSVecI16x8ToVecI8x16:
-      PANIC("   op = i8x16.narrow_i16x8_s");
+    case wasm::NarrowSVecI16x8ToVecI8x16: {
+      LOG("   op = i8x16.narrow_i16x8_s");
+      auto i8Ty = VectorType::get(Type::getInt8Ty(*Parent.context),
+                                  ElementCount::getFixed(8));
+      auto minVal = ConstantInt::get(left->getType(), -128);
+      auto maxVal = ConstantInt::get(left->getType(), 127);
+      auto clampedL = Builder.CreateBinaryIntrinsic(
+        Intrinsic::smin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::smax, left, minVal),
+        maxVal);
+      auto narrowL = Builder.CreateTrunc(clampedL, i8Ty);
+      auto clampedR = Builder.CreateBinaryIntrinsic(
+        Intrinsic::smin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::smax, right, minVal),
+        maxVal);
+      auto narrowR = Builder.CreateTrunc(clampedR, i8Ty);
+      inst = Builder.CreateShuffleVector(
+        narrowL,
+        narrowR,
+        std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
       break;
-    case wasm::NarrowUVecI16x8ToVecI8x16:
-      PANIC("   op = i8x16.narrow_i16x8_u");
+    }
+    case wasm::NarrowUVecI16x8ToVecI8x16: {
+      LOG("   op = i8x16.narrow_i16x8_u");
+      auto i8Ty = VectorType::get(Type::getInt8Ty(*Parent.context),
+                                  ElementCount::getFixed(8));
+      auto minVal = ConstantInt::get(left->getType(), 0);
+      auto maxVal = ConstantInt::get(left->getType(), 255);
+      auto clampedL = Builder.CreateBinaryIntrinsic(
+        Intrinsic::umin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::umax, left, minVal),
+        maxVal);
+      auto narrowL = Builder.CreateTrunc(clampedL, i8Ty);
+      auto clampedR = Builder.CreateBinaryIntrinsic(
+        Intrinsic::umin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::umax, right, minVal),
+        maxVal);
+      auto narrowR = Builder.CreateTrunc(clampedR, i8Ty);
+      inst = Builder.CreateShuffleVector(
+        narrowL,
+        narrowR,
+        std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
       break;
-    case wasm::NarrowSVecI32x4ToVecI16x8:
-      PANIC("   op = i16x8.narrow_i32x4_s");
+    }
+    case wasm::NarrowSVecI32x4ToVecI16x8: {
+      LOG("   op = i16x8.narrow_i32x4_s");
+      auto i16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                   ElementCount::getFixed(4));
+      auto minVal = ConstantInt::get(left->getType(), -32768);
+      auto maxVal = ConstantInt::get(left->getType(), 32767);
+      auto clampedL = Builder.CreateBinaryIntrinsic(
+        Intrinsic::smin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::smax, left, minVal),
+        maxVal);
+      auto narrowL = Builder.CreateTrunc(clampedL, i16Ty);
+      auto clampedR = Builder.CreateBinaryIntrinsic(
+        Intrinsic::smin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::smax, right, minVal),
+        maxVal);
+      auto narrowR = Builder.CreateTrunc(clampedR, i16Ty);
+      inst = Builder.CreateShuffleVector(
+        narrowL, narrowR, std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7});
       break;
-    case wasm::NarrowUVecI32x4ToVecI16x8:
-      PANIC("   op = i16x8.narrow_i32x4_u");
+    }
+    case wasm::NarrowUVecI32x4ToVecI16x8: {
+      LOG("   op = i16x8.narrow_i32x4_u");
+      auto i16Ty = VectorType::get(Type::getInt16Ty(*Parent.context),
+                                   ElementCount::getFixed(4));
+      auto minVal = ConstantInt::get(left->getType(), 0);
+      auto maxVal = ConstantInt::get(left->getType(), 65535);
+      auto clampedL = Builder.CreateBinaryIntrinsic(
+        Intrinsic::umin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::umax, left, minVal),
+        maxVal);
+      auto narrowL = Builder.CreateTrunc(clampedL, i16Ty);
+      auto clampedR = Builder.CreateBinaryIntrinsic(
+        Intrinsic::umin,
+        Builder.CreateBinaryIntrinsic(Intrinsic::umax, right, minVal),
+        maxVal);
+      auto narrowR = Builder.CreateTrunc(clampedR, i16Ty);
+      inst = Builder.CreateShuffleVector(
+        narrowL, narrowR, std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7});
       break;
+    }
 
-    case wasm::SwizzleVecI8x16:
-      PANIC("   op = i8x16.swizzle");
+    case wasm::SwizzleVecI8x16: {
+      LOG("   op = i8x16.swizzle");
+      auto mask = ConstantInt::get(right->getType(), 15);
+      auto clamped =
+        Builder.CreateBinaryIntrinsic(Intrinsic::umin, right, mask);
+      inst = Builder.CreateShuffleVector(
+        left, Constant::getNullValue(left->getType()), clamped);
       break;
+    }
+    case wasm::RelaxedSwizzleVecI8x16: {
+      LOG("   op = i8x16.relaxed_swizzle");
+      auto mask = ConstantInt::get(right->getType(), 15);
+      auto clamped =
+        Builder.CreateBinaryIntrinsic(Intrinsic::umin, right, mask);
+      inst = Builder.CreateShuffleVector(
+        left, Constant::getNullValue(left->getType()), clamped);
+      break;
+    }
 
     case wasm::RelaxedMinVecF32x4:
-      PANIC("   op = f32x4.relaxed_min");
+      LOG("   op = f32x4.relaxed_min");
+      inst = Builder.CreateMinimum(left, right);
       break;
     case wasm::RelaxedMaxVecF32x4:
-      PANIC("   op = f32x4.relaxed_max");
+      LOG("   op = f32x4.relaxed_max");
+      inst = Builder.CreateMaximum(left, right);
       break;
     case wasm::RelaxedMinVecF64x2:
-      PANIC("   op = f64x2.relaxed_min");
+      LOG("   op = f64x2.relaxed_min");
+      inst = Builder.CreateMinimum(left, right);
       break;
     case wasm::RelaxedMaxVecF64x2:
-      PANIC("   op = f64x2.relaxed_max");
-      break;
-    case wasm::RelaxedSwizzleVecI8x16:
-      PANIC("   op = i8x16.relaxed_swizzle");
+      LOG("   op = f64x2.relaxed_max");
+      inst = Builder.CreateMaximum(left, right);
       break;
     case wasm::RelaxedQ15MulrSVecI16x8:
       LOG("   op = i16x8.relaxed_q15mulr_s");
       break;
-    case wasm::DotI8x16I7x16SToVecI16x8:
-      PANIC("   op = i16x8.dot_i8x16_i7x16_s");
-      break;
     case wasm::EqVecF16x8:
-      PANIC("   op = f16x8.eq");
+      LOG("   op = f16x8.eq");
+      inst = Builder.CreateFCmpOEQ(left, right);
+      inst = Builder.CreateZExt(inst, Parent.v128);
       break;
     case wasm::NeVecF16x8:
-      PANIC("   op = f16x8.ne");
+      LOG("   op = f16x8.ne");
+      inst = Builder.CreateFCmpONE(left, right);
+      inst = Builder.CreateZExt(inst, Parent.v128);
       break;
     case wasm::LtVecF16x8:
-      PANIC("   op = f16x8.lt");
+      LOG("   op = f16x8.lt");
+      inst = Builder.CreateFCmpOLT(left, right);
+      inst = Builder.CreateZExt(inst, Parent.v128);
       break;
     case wasm::GtVecF16x8:
-      PANIC("   op = f16x8.gt");
+      LOG("   op = f16x8.gt");
+      inst = Builder.CreateFCmpOGT(left, right);
+      inst = Builder.CreateZExt(inst, Parent.v128);
       break;
     case wasm::LeVecF16x8:
-      PANIC("   op = f16x8.le");
+      LOG("   op = f16x8.le");
+      inst = Builder.CreateFCmpOLE(left, right);
+      inst = Builder.CreateZExt(inst, Parent.v128);
       break;
     case wasm::GeVecF16x8:
-      PANIC("   op = f16x8.ge");
+      LOG("   op = f16x8.ge");
+      inst = Builder.CreateFCmpOGE(left, right);
+      inst = Builder.CreateZExt(inst, Parent.v128);
       break;
     case wasm::AddVecF16x8:
-      PANIC("   op = f16x8.add");
+      LOG("   op = f16x8.add");
+      inst = Builder.CreateFAdd(left, right);
       break;
     case wasm::SubVecF16x8:
-      PANIC("   op = f16x8.sub");
+      LOG("   op = f16x8.sub");
+      inst = Builder.CreateFSub(left, right);
       break;
     case wasm::MulVecF16x8:
-      PANIC("   op = f16x8.mul");
+      LOG("   op = f16x8.mul");
+      inst = Builder.CreateFMul(left, right);
       break;
     case wasm::DivVecF16x8:
-      PANIC("   op = f16x8.div");
+      LOG("   op = f16x8.div");
+      inst = Builder.CreateFDiv(left, right);
       break;
     case wasm::MinVecF16x8:
-      PANIC("   op = f16x8.min");
+      LOG("   op = f16x8.min");
+      inst = Builder.CreateMinimum(left, right);
       break;
     case wasm::MaxVecF16x8:
-      PANIC("   op = f16x8.max");
+      LOG("   op = f16x8.max");
+      inst = Builder.CreateMaximum(left, right);
       break;
     case wasm::PMinVecF16x8:
-      PANIC("   op = f16x8.pmin");
+      LOG("   op = f16x8.pmin");
+      inst = Builder.CreateMinNum(left, right);
       break;
     case wasm::PMaxVecF16x8:
-      PANIC("   op = f16x8.pmax");
+      LOG("   op = f16x8.pmax");
+      inst = Builder.CreateMaxNum(left, right);
       break;
 
     case wasm::InvalidBinary:
@@ -2746,33 +3059,43 @@ Value* LLVMPass::IREmitter::visitUnary(wasm::Unary* curr) {
       break;
     case wasm::AbsVecF32x4:
       LOG(".   op = f32x4.abs");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, val);
       break;
     case wasm::NegVecF32x4:
       LOG(".   op = f32x4.neg");
+      inst = Builder.CreateFNeg(val);
       break;
     case wasm::SqrtVecF32x4:
       LOG(".   op = f32x4.sqrt");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::sqrt, val);
       break;
     case wasm::CeilVecF32x4:
       LOG(".   op = f32x4.ceil");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::ceil, val);
       break;
     case wasm::FloorVecF32x4:
       LOG(".   op = f32x4.floor");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::floor, val);
       break;
     case wasm::TruncVecF32x4:
       LOG(".   op = f32x4.trunc");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::trunc, val);
       break;
     case wasm::NearestVecF32x4:
       LOG(".   op = f32x4.nearest");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::roundeven, val);
       break;
     case wasm::AbsVecF64x2:
       LOG(".   op = f64x2.abs");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, val);
       break;
     case wasm::NegVecF64x2:
       LOG(".   op = f64x2.neg");
+      inst = Builder.CreateFNeg(val);
       break;
     case wasm::SqrtVecF64x2:
       LOG(".   op = f64x2.sqrt");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::sqrt, val);
       break;
     case wasm::CeilVecF64x2:
       LOG(".   op = f64x2.ceil");
@@ -2877,40 +3200,60 @@ Value* LLVMPass::IREmitter::visitUnary(wasm::Unary* curr) {
       LOG(".   op = i32x4.relaxed_trunc_f64x2_u_zero");
       break;
     case wasm::AbsVecF16x8:
-      PANIC(".   op = f16x8.abs");
+      LOG(".   op = f16x8.abs");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, val);
       break;
     case wasm::NegVecF16x8:
-      PANIC(".   op = f16x8.neg");
+      LOG(".   op = f16x8.neg");
+      inst = Builder.CreateFNeg(val);
       break;
     case wasm::SqrtVecF16x8:
-      PANIC(".   op = f16x8.sqrt");
+      LOG(".   op = f16x8.sqrt");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::sqrt, val);
       break;
     case wasm::CeilVecF16x8:
-      PANIC(".   op = f16x8.ceil");
+      LOG(".   op = f16x8.ceil");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::ceil, val);
       break;
     case wasm::FloorVecF16x8:
-      PANIC(".   op = f16x8.floor");
+      LOG(".   op = f16x8.floor");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::floor, val);
       break;
     case wasm::TruncVecF16x8:
-      PANIC(".   op = f16x8.trunc");
+      LOG(".   op = f16x8.trunc");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::trunc, val);
       break;
     case wasm::NearestVecF16x8:
-      PANIC(".   op = f16x8.nearest");
+      LOG(".   op = f16x8.nearest");
+      inst = Builder.CreateUnaryIntrinsic(Intrinsic::roundeven, val);
       break;
     case wasm::SplatVecF16x8:
-      PANIC(".   op = f16x8.splat");
+      LOG(".   op = f16x8.splat");
+      inst = Builder.CreateVectorSplat(8, val);
       break;
     case wasm::TruncSatSVecF16x8ToVecI16x8:
-      PANIC(".   op = i16x8.trunc_sat_f16x8_s");
+      LOG(".   op = i16x8.trunc_sat_f16x8_s");
+      inst = Builder.CreateBinaryIntrinsic(
+        Intrinsic::fptosi_sat, val, ConstantInt::get(Builder.getInt32Ty(), 16));
       break;
     case wasm::TruncSatUVecF16x8ToVecI16x8:
-      PANIC(".   op = i16x8.trunc_sat_f16x8_u");
+      LOG(".   op = i16x8.trunc_sat_f16x8_u");
+      inst = Builder.CreateBinaryIntrinsic(
+        Intrinsic::fptoui_sat, val, ConstantInt::get(Builder.getInt32Ty(), 16));
       break;
     case wasm::ConvertSVecI16x8ToVecF16x8:
-      PANIC(".   op = f16x8.convert_i16x8_s");
+      LOG(".   op = f16x8.convert_i16x8_s");
+      inst =
+        Builder.CreateSIToFP(val,
+                             VectorType::get(Type::getHalfTy(*Parent.context),
+                                             ElementCount::getFixed(8)));
       break;
     case wasm::ConvertUVecI16x8ToVecF16x8:
-      PANIC(".   op = f16x8.convert_i16x8_u");
+      LOG(".   op = f16x8.convert_i16x8_u");
+      inst =
+        Builder.CreateUIToFP(val,
+                             VectorType::get(Type::getHalfTy(*Parent.context),
+                                             ElementCount::getFixed(8)));
       break;
     case wasm::InvalidUnary:
       PANIC("unvalid unary operator");
